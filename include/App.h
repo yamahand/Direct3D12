@@ -5,11 +5,28 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
+#include <DirectXMath.h>
+#include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+template<typename T>
+struct ConstantBufferView {
+	D3D12_CONSTANT_BUFFER_VIEW_DESC desc;		// 定数バッファ構成設定
+	D3D12_CPU_DESCRIPTOR_HANDLE		handleCPU;	// CPUディスクリプタハンドル
+	D3D12_GPU_DESCRIPTOR_HANDLE		handleGPU;	// GPUディスクリプタハンドル
+	T* pBuffer;		// バッファの先頭へのポインタ
+};
+
+struct alignas(256) Transform {
+	DirectX::XMMATRIX	world;
+	DirectX::XMMATRIX	view;
+	DirectX::XMMATRIX	proj;
+};
 
 class App
 {
@@ -33,6 +50,9 @@ private:
 	void WaitGpu();
 	void Present(uint32_t interval);
 
+	bool OnInit();
+	void OnTerm();
+
 	void MainLoop();
 
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
@@ -53,10 +73,21 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> m_pCmdList;	//!< コマンドリスト
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;	//!< レンダーターゲットディスクリプタヒープ
 	ComPtr<ID3D12Fence> m_pFence;	//!< フェンス
+	ComPtr<ID3D12DescriptorHeap>	m_pHeapCBV;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
+	ComPtr<ID3D12Resource>			m_pVB;		// 頂点バッファ
+	ComPtr<ID3D12Resource>			m_pCB[FrameCount];	// 定数バッファ
+	ComPtr<ID3D12RootSignature>		m_pRootSignature;	// ルートシグネチャ
+	ComPtr<ID3D12PipelineState>		m_pPSO;				// パイプラインステートオブジェクト
+
 	HANDLE m_fenceEvent = {};			//!< フェンスイベント
 	uint64_t m_fenceCounter[FrameCount] = {};	//!< フェンスカウンター
 	uint32_t m_frameIndex = 0;					//!< フレームインデックス
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
 
+	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
+	D3D12_VIEWPORT					m_viewport;	// ビューポート
+	D3D12_RECT						m_scissor;	// シザー矩形
+	ConstantBufferView<Transform>	m_CBV[FrameCount];
+	float							m_rotateAngle;	// 回転角
 };
 
