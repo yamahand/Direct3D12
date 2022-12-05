@@ -75,6 +75,7 @@ private:
 	ComPtr<ID3D12Fence> m_pFence;	//!< フェンス
 	ComPtr<ID3D12DescriptorHeap>	m_pHeapCBV;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
 	ComPtr<ID3D12Resource>			m_pVB;		// 頂点バッファ
+	ComPtr<ID3D12Resource>			m_pIB;		// インデックスバッファ
 	ComPtr<ID3D12Resource>			m_pCB[FrameCount];	// 定数バッファ
 	ComPtr<ID3D12RootSignature>		m_pRootSignature;	// ルートシグネチャ
 	ComPtr<ID3D12PipelineState>		m_pPSO;				// パイプラインステートオブジェクト
@@ -85,6 +86,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
+	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
 	D3D12_VIEWPORT					m_viewport;	// ビューポート
 	D3D12_RECT						m_scissor;	// シザー矩形
 	ConstantBufferView<Transform>	m_CBV[FrameCount];

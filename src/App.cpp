@@ -427,10 +427,11 @@ void App::Render()
 
 		m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		m_pCmdList->IASetVertexBuffers(0, 1, &m_VBV);
+		m_pCmdList->IASetIndexBuffer(&m_ibv);
 		m_pCmdList->RSSetViewports(1, &m_viewport);
 		m_pCmdList->RSSetScissorRects(1, &m_scissor);
 
-		m_pCmdList->DrawInstanced(3, 1, 0, 0);
+		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	}
 
 	// リソースバリア設定
@@ -497,9 +498,10 @@ bool App::OnInit()
 	{
 		// 頂点データ
 		Vertex vertices[] = {
-			{ DirectX::XMFLOAT3( -1.0f, -1.0f,  0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-			{ DirectX::XMFLOAT3(  1.0f, -1.0f,  0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-			{ DirectX::XMFLOAT3(  0.0f,  1.0f,  0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+			{ DirectX::XMFLOAT3(-1.0f, 1.0f, 0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+			{ DirectX::XMFLOAT3( 1.0f, 1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+			{ DirectX::XMFLOAT3( 1.0f,-1.0f, 0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+			{ DirectX::XMFLOAT3(-1.0f,-1.0f, 0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
 		};
 
 		// ヒーププロパティ
@@ -554,6 +556,64 @@ bool App::OnInit()
 		m_VBV.BufferLocation = m_pVB->GetGPUVirtualAddress();
 		m_VBV.SizeInBytes = static_cast<UINT>(sizeof(vertices));
 		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(Vertex));
+	}
+
+	// インデクスバッファ
+	{
+		uint32_t indices[] = { 0,1,2,0,2,3 };
+
+		// ヒーププロパティ
+		D3D12_HEAP_PROPERTIES prop = {};
+		prop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		prop.CreationNodeMask = 1;
+		prop.VisibleNodeMask = 1;
+
+		// リソースの設定
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		desc.Alignment = 0;
+		desc.Width = sizeof(indices);
+		desc.Height = 1;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_UNKNOWN;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+		// リソースを生成
+		auto hr = m_pDevice->CreateCommittedResource(
+			&prop,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(m_pIB.ReleaseAndGetAddressOf())
+		);
+		if (FAILED(hr)) {
+			return false;
+		}
+
+		// マッピング
+		void* ptr = nullptr;
+		m_pIB->Map(0, nullptr, &ptr);
+		if (FAILED(hr)) {
+			return false;
+		}
+
+		// インデックスデータをコピー
+		memcpy(ptr, indices, sizeof(indices));
+
+		// マッピング解除
+		m_pIB->Unmap(0, nullptr);
+
+		// インデックスバッファビューの設定
+		m_ibv.BufferLocation = m_pIB->GetGPUVirtualAddress();
+		m_ibv.Format = DXGI_FORMAT_R32_UINT;
+		m_ibv.SizeInBytes = sizeof(indices);
 	}
 
 	// 定数バッファ用ディスクリプタヒープを生成
