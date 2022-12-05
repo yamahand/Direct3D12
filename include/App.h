@@ -69,14 +69,16 @@ private:
 	ComPtr<ID3D12CommandQueue> m_pQueue;	//!< コマンドキュー
 	ComPtr<IDXGISwapChain3> m_pSwapChain;	//!< スワップチェイン
 	ComPtr<ID3D12Resource> m_pColorBuffer[FrameCount];	//!< カラーバッファ
+	ComPtr<ID3D12Resource> m_pDepthBuffer;	//!< デプスバッファ
 	ComPtr<ID3D12CommandAllocator> m_pCmdAllocator[FrameCount];	//!< コマンドアロケータ
 	ComPtr<ID3D12GraphicsCommandList> m_pCmdList;	//!< コマンドリスト
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;	//!< レンダーターゲットディスクリプタヒープ
+	ComPtr<ID3D12DescriptorHeap> m_pHeapDSV;	//!< デプスステンシルディスクリプタヒープ
 	ComPtr<ID3D12Fence> m_pFence;	//!< フェンス
 	ComPtr<ID3D12DescriptorHeap>	m_pHeapCBV;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
 	ComPtr<ID3D12Resource>			m_pVB;		// 頂点バッファ
 	ComPtr<ID3D12Resource>			m_pIB;		// インデックスバッファ
-	ComPtr<ID3D12Resource>			m_pCB[FrameCount];	// 定数バッファ
+	ComPtr<ID3D12Resource>			m_pCB[FrameCount * 2];	// 定数バッファ
 	ComPtr<ID3D12RootSignature>		m_pRootSignature;	// ルートシグネチャ
 	ComPtr<ID3D12PipelineState>		m_pPSO;				// パイプラインステートオブジェクト
 
@@ -84,12 +86,13 @@ private:
 	uint64_t m_fenceCounter[FrameCount] = {};	//!< フェンスカウンター
 	uint32_t m_frameIndex = 0;					//!< フレームインデックス
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
+	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
 	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
 	D3D12_VIEWPORT					m_viewport;	// ビューポート
 	D3D12_RECT						m_scissor;	// シザー矩形
-	ConstantBufferView<Transform>	m_CBV[FrameCount];
+	ConstantBufferView<Transform>	m_CBV[FrameCount * 2];
 	float							m_rotateAngle;	// 回転角
 };
 

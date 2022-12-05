@@ -312,6 +312,73 @@ bool App::InitD3D()
 		}
 	}
 
+	// デプスステンシルバッファの作成
+	{
+		D3D12_HEAP_PROPERTIES prop = {};
+		prop.Type = D3D12_HEAP_TYPE_DEFAULT;
+		prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		prop.CreationNodeMask = 1;
+		prop.VisibleNodeMask = 1;
+
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		desc.Alignment = 0;
+		desc.Width = m_width;
+		desc.Height = m_height;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_D32_FLOAT;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+		D3D12_CLEAR_VALUE clearValue = {};
+		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
+
+		hr = m_pDevice->CreateCommittedResource(
+			&prop,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValue,
+			IID_PPV_ARGS(m_pDepthBuffer.ReleaseAndGetAddressOf())
+		);
+		if (FAILED(hr)) {
+			return false;
+		}
+
+		// ディスクリプタヒープの設定
+		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+		heapDesc.NumDescriptors = 1;
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		heapDesc.NodeMask = 0;
+
+		hr = m_pDevice->CreateDescriptorHeap(
+			&heapDesc,
+			IID_PPV_ARGS(m_pHeapDSV.ReleaseAndGetAddressOf())
+		);
+		if (FAILED(hr)) {
+			return false;
+		}
+
+		auto handle = m_pHeapDSV->GetCPUDescriptorHandleForHeapStart();
+		auto incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+		D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
+		viewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		viewDesc.Texture2D.MipSlice = 0;
+		viewDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+		m_pDevice->CreateDepthStencilView(m_pDepthBuffer.Get(), &viewDesc, handle);
+		m_handleDSV = handle;
+	}
+
 	// フェンスの生成
 	{
 		// フェンスカウンターをリセット
@@ -389,8 +456,9 @@ void App::Render()
 {
 	// 更新処理
 	{
-		m_rotateAngle += 0.25f;
-		m_CBV[m_frameIndex].pBuffer->world = DirectX::XMMatrixRotationY(m_rotateAngle);
+		m_rotateAngle += 0.025f;
+		m_CBV[m_frameIndex * 2 + 0].pBuffer->world = DirectX::XMMatrixRotationZ(m_rotateAngle + DirectX::XMConvertToRadians(45.0f));
+		m_CBV[m_frameIndex * 2 + 1].pBuffer->world = DirectX::XMMatrixRotationY(m_rotateAngle) * DirectX::XMMatrixScaling(2.0f, 0.5f, 1.0f);
 	}
 
 	// コマンドの記録開始
@@ -410,19 +478,21 @@ void App::Render()
 	m_pCmdList->ResourceBarrier(1, &barrier);
 
 	// レンダーターゲットの設定
-	m_pCmdList->OMSetRenderTargets(1, &m_handleRTV[m_frameIndex], FALSE, nullptr);
+	m_pCmdList->OMSetRenderTargets(1, &m_handleRTV[m_frameIndex], FALSE, &m_handleDSV);
 
 	// クリアカラー設定
 	float clearColor[] = {0.25f, 0.25f, 0.25f, 1.0f};
 
-	// レンダーターゲットビューをkuria 
+	// レンダーターゲットビューをクリア
 	m_pCmdList->ClearRenderTargetView(m_handleRTV[m_frameIndex], clearColor, 0, nullptr);
+
+	// デプスステンシルバッファのクリア
+	m_pCmdList->ClearDepthStencilView(m_handleDSV, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画処理
 	{
 		m_pCmdList->SetGraphicsRootSignature(m_pRootSignature.Get());
 		m_pCmdList->SetDescriptorHeaps(1, m_pHeapCBV.GetAddressOf());
-		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex].desc.BufferLocation);
 		m_pCmdList->SetPipelineState(m_pPSO.Get());
 
 		m_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -431,6 +501,10 @@ void App::Render()
 		m_pCmdList->RSSetViewports(1, &m_viewport);
 		m_pCmdList->RSSetScissorRects(1, &m_scissor);
 
+		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 0].desc.BufferLocation);
+		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 1].desc.BufferLocation);
 		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	}
 
@@ -620,7 +694,7 @@ bool App::OnInit()
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		desc.NumDescriptors = 1 * FrameCount;
+		desc.NumDescriptors = 2 * FrameCount;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		desc.NodeMask = 0;
 
@@ -659,7 +733,7 @@ bool App::OnInit()
 
 		auto incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-		for (auto i = 0; i < FrameCount; i++)
+		for (auto i = 0; i < FrameCount * 2; i++)
 		{
 			auto hr = m_pDevice->CreateCommittedResource(
 				&prop,
@@ -807,6 +881,13 @@ bool App::OnInit()
 			descBS.RenderTarget[i] = descRTBS;
 		}
 
+		// デプスステンシルステートの設定
+		D3D12_DEPTH_STENCIL_DESC descDSS = {};
+		descDSS.DepthEnable = TRUE;
+		descDSS.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		descDSS.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		descDSS.StencilEnable = FALSE;
+
 		ComPtr<ID3DBlob> pVSBlob;
 		ComPtr<ID3DBlob> pPSBlob;
 
@@ -830,13 +911,12 @@ bool App::OnInit()
 		desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
 		desc.RasterizerState = descRS;
 		desc.BlendState = descBS;
-		desc.DepthStencilState.DepthEnable = FALSE;
-		desc.DepthStencilState.StencilEnable = FALSE;
+		desc.DepthStencilState = descDSS;;
 		desc.SampleMask = UINT_MAX;
 		desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		desc.NumRenderTargets = 1;
 		desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
+		desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
