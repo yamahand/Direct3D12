@@ -803,7 +803,7 @@ bool App::OnInit()
 		range.RegisterSpace = 0;
 		range.OffsetInDescriptorsFromTableStart = 0;
 
-		param[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+		param[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		param[1].DescriptorTable.NumDescriptorRanges = 1;
 		param[1].DescriptorTable.pDescriptorRanges = &range;
 		param[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -858,6 +858,7 @@ bool App::OnInit()
 	}
 
 	// パイプラインステートの生成
+#if 1
 	{
 		// 入力レイアウトの設定
 		D3D12_INPUT_ELEMENT_DESC elements[2];
@@ -948,6 +949,89 @@ bool App::OnInit()
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
+		hr = m_pDevice->CreateGraphicsPipelineState(
+			&desc,
+			IID_PPV_ARGS(m_pPSO.ReleaseAndGetAddressOf())
+		);
+		if (FAILED(hr)) {
+			return false;
+		}
+	}
+#else
+	{
+		// 入力レイアウトの設定.
+		D3D12_INPUT_ELEMENT_DESC elements[2];
+		elements[0].SemanticName = "POSITION";
+		elements[0].SemanticIndex = 0;
+		elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		elements[0].InputSlot = 0;
+		elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+		elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		elements[0].InstanceDataStepRate = 0;
+
+		elements[1].SemanticName = "TEXCOORD";
+		elements[1].SemanticIndex = 0;
+		elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		elements[1].InputSlot = 0;
+		elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+		elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		elements[1].InstanceDataStepRate = 0;
+
+		// ラスタライザーステートの設定.
+		D3D12_RASTERIZER_DESC descRS;
+		descRS.FillMode = D3D12_FILL_MODE_SOLID;
+		descRS.CullMode = D3D12_CULL_MODE_NONE;
+		descRS.FrontCounterClockwise = FALSE;
+		descRS.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+		descRS.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+		descRS.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+		descRS.DepthClipEnable = FALSE;
+		descRS.MultisampleEnable = FALSE;
+		descRS.AntialiasedLineEnable = FALSE;
+		descRS.ForcedSampleCount = 0;
+		descRS.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+		// レンダーターゲットのブレンド設定.
+		D3D12_RENDER_TARGET_BLEND_DESC descRTBS = {
+			FALSE, FALSE,
+			D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+			D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+			D3D12_LOGIC_OP_NOOP,
+			D3D12_COLOR_WRITE_ENABLE_ALL
+		};
+
+		// ブレンドステートの設定.
+		D3D12_BLEND_DESC descBS;
+		descBS.AlphaToCoverageEnable = FALSE;
+		descBS.IndependentBlendEnable = FALSE;
+		for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+		{
+			descBS.RenderTarget[i] = descRTBS;
+		}
+
+		ComPtr<ID3DBlob> pVSBlob;
+		ComPtr<ID3DBlob> pPSBlob;
+
+		std::wstring vsPath;
+		std::wstring psPath;
+
+
+		// 頂点シェーダ読み込み.
+		auto hr = D3DReadFileToBlob(L"SimpleTexVS.cso", pVSBlob.GetAddressOf());
+		if (FAILED(hr))
+		{
+			return false;
+		}
+
+		// ピクセルシェーダ読み込み.
+		hr = D3DReadFileToBlob(L"SimpleTexPS.cso", pPSBlob.GetAddressOf());
+		if (FAILED(hr))
+		{
+			return false;
+		}
+
+		// パイプラインステートの設定.
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 		desc.InputLayout = { elements, _countof(elements) };
 		desc.pRootSignature = m_pRootSignature.Get();
 		desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
@@ -964,14 +1048,16 @@ bool App::OnInit()
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
+		// パイプラインステートを生成.
 		hr = m_pDevice->CreateGraphicsPipelineState(
 			&desc,
-			IID_PPV_ARGS(m_pPSO.ReleaseAndGetAddressOf())
-		);
-		if (FAILED(hr)) {
+			IID_PPV_ARGS(m_pPSO.GetAddressOf()));
+		if (FAILED(hr))
+		{
 			return false;
 		}
 	}
+#endif
 
 	// テクスチャ生成
 	{
@@ -1008,7 +1094,7 @@ bool App::OnInit()
 
 		// テクスチャにディスクリプタを割り当てる
 		handleCPU.ptr += incrementSize * 2;
-		handleCPU.ptr += incrementSize * 2;
+		handleGPU.ptr += incrementSize * 2;
 
 		m_texture.handleCPU = handleCPU;
 		m_texture.handleGPU = handleGPU;
