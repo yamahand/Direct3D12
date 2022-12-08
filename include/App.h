@@ -10,6 +10,7 @@
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -26,6 +27,12 @@ struct alignas(256) Transform {
 	DirectX::XMMATRIX	world;
 	DirectX::XMMATRIX	view;
 	DirectX::XMMATRIX	proj;
+};
+
+struct Texture {
+	ComPtr<ID3D12Resource>	pResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
 };
 
 class App
@@ -75,7 +82,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;	//!< レンダーターゲットディスクリプタヒープ
 	ComPtr<ID3D12DescriptorHeap> m_pHeapDSV;	//!< デプスステンシルディスクリプタヒープ
 	ComPtr<ID3D12Fence> m_pFence;	//!< フェンス
-	ComPtr<ID3D12DescriptorHeap>	m_pHeapCBV;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
+	ComPtr<ID3D12DescriptorHeap>	m_pHeapCbvSrvUav;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
 	ComPtr<ID3D12Resource>			m_pVB;		// 頂点バッファ
 	ComPtr<ID3D12Resource>			m_pIB;		// インデックスバッファ
 	ComPtr<ID3D12Resource>			m_pCB[FrameCount * 2];	// 定数バッファ
@@ -87,6 +94,8 @@ private:
 	uint32_t m_frameIndex = 0;					//!< フレームインデックス
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
+
+	Texture							m_texture;
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
 	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
