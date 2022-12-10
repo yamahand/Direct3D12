@@ -2,6 +2,7 @@
 #include "ResourceUploadBatch.h"
 #include "DDSTextureLoader.h"
 #include "VertexTypes.h"
+#include "Mesh.h"
 #include <cassert>
 
 namespace {
@@ -568,6 +569,16 @@ void App::Present(uint32_t interval)
 
 bool App::OnInit()
 {
+	// メッシュをロード
+	{
+		std::wstring path = L"res/teapot/teapot.obj";
+		if (!LoadMesh(path.c_str(), m_meshes, m_materials)) {
+			return false;
+		}
+
+		assert(m_meshes.size() == 1);	// メッシュは1個限定
+	}
+
 	// 頂点バッファの生成
 	{
 		// 頂点データ

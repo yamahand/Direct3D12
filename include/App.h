@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif // !NOMINMAX
+
 #include <Windows.h>
 #include <cstdint>
 #include <d3d12.h>
@@ -7,6 +11,7 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
+#include "Mesh.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -95,7 +100,9 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
 
-	Texture							m_texture;
+	Texture							m_texture;		//!< テクスチャ
+	std::vector<Mesh>				m_meshes;		//!< メッシュ
+	std::vector<Material>			m_materials;	//!< マテリアル
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
 	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
