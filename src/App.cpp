@@ -502,11 +502,13 @@ void App::Render()
 		m_pCmdList->RSSetViewports(1, &m_viewport);
 		m_pCmdList->RSSetScissorRects(1, &m_scissor);
 
+		auto count = static_cast<uint32_t>(m_meshes[0].indices.size());
+		
 		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 0].desc.BufferLocation);
-		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		m_pCmdList->DrawIndexedInstanced(count, 1, 0, 0, 0);
 
-		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 1].desc.BufferLocation);
-		m_pCmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		//m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 1].desc.BufferLocation);
+		//m_pCmdList->DrawIndexedInstanced(count, 1, 0, 0, 0);
 	}
 
 	// リソースバリア設定
@@ -582,12 +584,8 @@ bool App::OnInit()
 	// 頂点バッファの生成
 	{
 		// 頂点データ
-		DirectX::VertexPositionTexture vertices[] = {
-			{ DirectX::XMFLOAT3(-1.0f, 1.0f, 0.0f), DirectX::XMFLOAT2(0.0f, 0.0f) },
-			{ DirectX::XMFLOAT3( 1.0f, 1.0f, 0.0f), DirectX::XMFLOAT2(1.0f, 0.0f) },
-			{ DirectX::XMFLOAT3( 1.0f,-1.0f, 0.0f), DirectX::XMFLOAT2(1.0f, 1.0f) },
-			{ DirectX::XMFLOAT3(-1.0f,-1.0f, 0.0f), DirectX::XMFLOAT2(0.0f, 1.0f) },
-		};
+		auto size = sizeof(MeshVertex) * m_meshes[0].vertices.size();
+		auto vertices = m_meshes[0].vertices.data();
 
 		// ヒーププロパティ
 		D3D12_HEAP_PROPERTIES prop = {};
@@ -601,7 +599,7 @@ bool App::OnInit()
 		D3D12_RESOURCE_DESC desc = {};
 		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		desc.Alignment = 0;
-		desc.Width = sizeof(vertices);
+		desc.Width = size;
 		desc.Height = 1;
 		desc.DepthOrArraySize = 1;
 		desc.MipLevels = 1;
@@ -632,20 +630,21 @@ bool App::OnInit()
 		}
 
 		// 頂点データをマッピング先に設定
-		memcpy(ptr, vertices, sizeof(vertices));
+		memcpy(ptr, vertices, size);
 
 		// マッピング解除
 		m_pVB->Unmap(0, nullptr);
 
 		// 頂点バッファビューの設定
 		m_VBV.BufferLocation = m_pVB->GetGPUVirtualAddress();
-		m_VBV.SizeInBytes = static_cast<UINT>(sizeof(vertices));
-		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(DirectX::VertexPositionTexture));
+		m_VBV.SizeInBytes = static_cast<UINT>(size);
+		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(vertices));
 	}
 
 	// インデクスバッファ
 	{
-		uint32_t indices[] = { 0,1,2,0,2,3 };
+		auto size = sizeof(uint32_t) * m_meshes[0].indices.size();
+		auto indices = m_meshes[0].indices.data();
 
 		// ヒーププロパティ
 		D3D12_HEAP_PROPERTIES prop = {};
@@ -659,7 +658,7 @@ bool App::OnInit()
 		D3D12_RESOURCE_DESC desc = {};
 		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		desc.Alignment = 0;
-		desc.Width = sizeof(indices);
+		desc.Width = size;
 		desc.Height = 1;
 		desc.DepthOrArraySize = 1;
 		desc.MipLevels = 1;
@@ -690,7 +689,7 @@ bool App::OnInit()
 		}
 
 		// インデックスデータをコピー
-		memcpy(ptr, indices, sizeof(indices));
+		memcpy(ptr, indices, size);
 
 		// マッピング解除
 		m_pIB->Unmap(0, nullptr);
@@ -698,7 +697,7 @@ bool App::OnInit()
 		// インデックスバッファビューの設定
 		m_ibv.BufferLocation = m_pIB->GetGPUVirtualAddress();
 		m_ibv.Format = DXGI_FORMAT_R32_UINT;
-		m_ibv.SizeInBytes = sizeof(indices);
+		m_ibv.SizeInBytes = static_cast<UINT>(size);
 	}
 
 	// CBV/SRV/UAV用ディスクリプタヒープを生成
@@ -779,7 +778,7 @@ bool App::OnInit()
 				return false;
 			}
 
-			auto eyePos = DirectX::XMVectorSet(0.0f, 0.0f, 5.0f, 0.0f);
+			auto eyePos = DirectX::XMVectorSet(0.0f, 1.0f, 2.0f, 0.0f);
 			auto targetPos = DirectX::XMVectorZero();
 			auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -869,26 +868,7 @@ bool App::OnInit()
 	}
 
 	// パイプラインステートの生成
-#if 1
 	{
-		// 入力レイアウトの設定
-		D3D12_INPUT_ELEMENT_DESC elements[2];
-		elements[0].SemanticName = "POSITION";
-		elements[0].SemanticIndex = 0;
-		elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		elements[0].InputSlot = 0;
-		elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[0].InstanceDataStepRate = 0;
-
-		elements[1].SemanticName = "TEXCOORD";
-		elements[1].SemanticIndex = 0;
-		elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-		elements[1].InputSlot = 0;
-		elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[1].InstanceDataStepRate = 0;
-
 		// ラスタライザーステートの設定
 		D3D12_RASTERIZER_DESC descRS = {};
 		descRS.FillMode = D3D12_FILL_MODE_SOLID;
@@ -945,7 +925,7 @@ bool App::OnInit()
 
 		// パイプラインステートの設定
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-		desc.InputLayout = { elements, _countof(elements) };
+		desc.InputLayout = MeshVertex::InputLayout;
 		desc.pRootSignature = m_pRootSignature.Get();
 		desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
 		desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
@@ -968,112 +948,11 @@ bool App::OnInit()
 			return false;
 		}
 	}
-#else
-	{
-		// 入力レイアウトの設定.
-		D3D12_INPUT_ELEMENT_DESC elements[2];
-		elements[0].SemanticName = "POSITION";
-		elements[0].SemanticIndex = 0;
-		elements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		elements[0].InputSlot = 0;
-		elements[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[0].InstanceDataStepRate = 0;
-
-		elements[1].SemanticName = "TEXCOORD";
-		elements[1].SemanticIndex = 0;
-		elements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-		elements[1].InputSlot = 0;
-		elements[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		elements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		elements[1].InstanceDataStepRate = 0;
-
-		// ラスタライザーステートの設定.
-		D3D12_RASTERIZER_DESC descRS;
-		descRS.FillMode = D3D12_FILL_MODE_SOLID;
-		descRS.CullMode = D3D12_CULL_MODE_NONE;
-		descRS.FrontCounterClockwise = FALSE;
-		descRS.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-		descRS.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-		descRS.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-		descRS.DepthClipEnable = FALSE;
-		descRS.MultisampleEnable = FALSE;
-		descRS.AntialiasedLineEnable = FALSE;
-		descRS.ForcedSampleCount = 0;
-		descRS.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-
-		// レンダーターゲットのブレンド設定.
-		D3D12_RENDER_TARGET_BLEND_DESC descRTBS = {
-			FALSE, FALSE,
-			D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-			D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-			D3D12_LOGIC_OP_NOOP,
-			D3D12_COLOR_WRITE_ENABLE_ALL
-		};
-
-		// ブレンドステートの設定.
-		D3D12_BLEND_DESC descBS;
-		descBS.AlphaToCoverageEnable = FALSE;
-		descBS.IndependentBlendEnable = FALSE;
-		for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
-		{
-			descBS.RenderTarget[i] = descRTBS;
-		}
-
-		ComPtr<ID3DBlob> pVSBlob;
-		ComPtr<ID3DBlob> pPSBlob;
-
-		std::wstring vsPath;
-		std::wstring psPath;
-
-
-		// 頂点シェーダ読み込み.
-		auto hr = D3DReadFileToBlob(L"SimpleTexVS.cso", pVSBlob.GetAddressOf());
-		if (FAILED(hr))
-		{
-			return false;
-		}
-
-		// ピクセルシェーダ読み込み.
-		hr = D3DReadFileToBlob(L"SimpleTexPS.cso", pPSBlob.GetAddressOf());
-		if (FAILED(hr))
-		{
-			return false;
-		}
-
-		// パイプラインステートの設定.
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-		desc.InputLayout = { elements, _countof(elements) };
-		desc.pRootSignature = m_pRootSignature.Get();
-		desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-		desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-		desc.RasterizerState = descRS;
-		desc.BlendState = descBS;
-		desc.DepthStencilState.DepthEnable = FALSE;
-		desc.DepthStencilState.StencilEnable = FALSE;
-		desc.SampleMask = UINT_MAX;
-		desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		desc.NumRenderTargets = 1;
-		desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		desc.DSVFormat = DXGI_FORMAT_UNKNOWN;
-		desc.SampleDesc.Count = 1;
-		desc.SampleDesc.Quality = 0;
-
-		// パイプラインステートを生成.
-		hr = m_pDevice->CreateGraphicsPipelineState(
-			&desc,
-			IID_PPV_ARGS(m_pPSO.GetAddressOf()));
-		if (FAILED(hr))
-		{
-			return false;
-		}
-	}
-#endif
 
 	// テクスチャ生成
 	{
 		// ファイルパス
-		std::wstring texturePath = TEXT("res/SampleTexture.DDS");
+		std::wstring texturePath = TEXT("res/teapot/default.DDS");
 
 		DirectX::ResourceUploadBatch batch(m_pDevice.Get());
 		batch.Begin();

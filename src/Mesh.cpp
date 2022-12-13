@@ -106,7 +106,7 @@ namespace {
 		aiVector3D zero3D(0.0f, 0.0f, 0.0f);
 
 		// 頂点データのメモリを確保
-		dstMesh.vertice.resize(pSrcMesh->mNumVertices);
+		dstMesh.vertices.resize(pSrcMesh->mNumVertices);
 
 		for (auto i = 0U; i < pSrcMesh->mNumVertices; i++)
 		{
@@ -115,7 +115,7 @@ namespace {
 			auto PTexCoord = (pSrcMesh->HasTextureCoords(0)) ? &(pSrcMesh->mTextureCoords[0][1]) : &zero3D;
 			auto pTangent = (pSrcMesh->HasTangentsAndBitangents() ) ? &(pSrcMesh->mTangents[1]) : &zero3D;
 
-			dstMesh.vertice[i] = MeshVertex(
+			dstMesh.vertices[i] = MeshVertex(
 				DirectX::XMFLOAT3(pPosition->x, pPosition->y, pPosition->z),
 				DirectX::XMFLOAT3(pNormal->x, pNormal->y, pNormal->z),
 				DirectX::XMFLOAT2(PTexCoord->x, PTexCoord->y),
@@ -126,7 +126,7 @@ namespace {
 		// 頂点インデックスのメモリを確保
 		dstMesh.indices.resize(pSrcMesh->mNumFaces * 3);
 
-		for (auto i = 0; i < pSrcMesh->mNumFaces; i++)
+		for (auto i = 0u; i < pSrcMesh->mNumFaces; i++)
 		{
 			const auto& face = pSrcMesh->mFaces[i];
 			assert(face.mNumIndices == 3);	// 三角形化しているので必ず3になっているはず

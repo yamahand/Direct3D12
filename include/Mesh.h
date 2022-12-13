@@ -41,7 +41,7 @@ struct Material {
 };
 
 struct Mesh {
-	std::vector<MeshVertex>	vertice;	//!< 頂点データ
+	std::vector<MeshVertex>	vertices;	//!< 頂点データ
 	std::vector<uint32_t>	indices;	//!< 頂点インデックス
 	uint32_t				materialId;	//!< マテリアル番号
 };
