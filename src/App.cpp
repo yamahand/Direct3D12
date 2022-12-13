@@ -457,8 +457,7 @@ void App::Render()
 	// 更新処理
 	{
 		m_rotateAngle += 0.025f;
-		m_CBV[m_frameIndex * 2 + 0].pBuffer->world = DirectX::XMMatrixRotationZ(m_rotateAngle + DirectX::XMConvertToRadians(45.0f));
-		m_CBV[m_frameIndex * 2 + 1].pBuffer->world = DirectX::XMMatrixRotationY(m_rotateAngle) * DirectX::XMMatrixScaling(2.0f, 0.5f, 1.0f);
+		m_CBV[m_frameIndex].pBuffer->world = DirectX::XMMatrixRotationY(m_rotateAngle + DirectX::XMConvertToRadians(45.0f));
 	}
 
 	// コマンドの記録開始
@@ -504,11 +503,8 @@ void App::Render()
 
 		auto count = static_cast<uint32_t>(m_meshes[0].indices.size());
 		
-		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 0].desc.BufferLocation);
+		m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex].desc.BufferLocation);
 		m_pCmdList->DrawIndexedInstanced(count, 1, 0, 0, 0);
-
-		//m_pCmdList->SetGraphicsRootConstantBufferView(0, m_CBV[m_frameIndex * 2 + 1].desc.BufferLocation);
-		//m_pCmdList->DrawIndexedInstanced(count, 1, 0, 0, 0);
 	}
 
 	// リソースバリア設定
@@ -638,7 +634,7 @@ bool App::OnInit()
 		// 頂点バッファビューの設定
 		m_VBV.BufferLocation = m_pVB->GetGPUVirtualAddress();
 		m_VBV.SizeInBytes = static_cast<UINT>(size);
-		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(vertices));
+		m_VBV.StrideInBytes = static_cast<UINT>(sizeof(MeshVertex));
 	}
 
 	// インデクスバッファ
@@ -743,7 +739,7 @@ bool App::OnInit()
 
 		auto incrementSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-		for (auto i = 0; i < FrameCount * 2; i++)
+		for (auto i = 0; i < FrameCount; i++)
 		{
 			auto hr = m_pDevice->CreateCommittedResource(
 				&prop,

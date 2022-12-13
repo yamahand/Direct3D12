@@ -112,8 +112,8 @@ namespace {
 		{
 			auto pPosition = &(pSrcMesh->mVertices[i]);
 			auto pNormal = &(pSrcMesh->mNormals[i]);
-			auto PTexCoord = (pSrcMesh->HasTextureCoords(0)) ? &(pSrcMesh->mTextureCoords[0][1]) : &zero3D;
-			auto pTangent = (pSrcMesh->HasTangentsAndBitangents() ) ? &(pSrcMesh->mTangents[1]) : &zero3D;
+			auto PTexCoord = (pSrcMesh->HasTextureCoords(0)) ? &(pSrcMesh->mTextureCoords[0][i]) : &zero3D;
+			auto pTangent = (pSrcMesh->HasTangentsAndBitangents() ) ? &(pSrcMesh->mTangents[i]) : &zero3D;
 
 			dstMesh.vertices[i] = MeshVertex(
 				DirectX::XMFLOAT3(pPosition->x, pPosition->y, pPosition->z),
@@ -197,7 +197,7 @@ namespace {
 	}
 }
 
-#define FMT_FLOAT3	DXGI_FORMAT_R32G32B32A32_FLOAT
+#define FMT_FLOAT3	DXGI_FORMAT_R32G32B32_FLOAT
 #define FMT_FLOAT2	DXGI_FORMAT_R32G32_FLOAT
 #define APPEND		D3D12_APPEND_ALIGNED_ELEMENT
 #define IL_VERTEX	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
