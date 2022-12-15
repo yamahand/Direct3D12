@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\App.h" />
     <ClInclude Include="..\include\Mesh.h" />
+    <ClInclude Include="..\include\Pool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\App.cpp" />

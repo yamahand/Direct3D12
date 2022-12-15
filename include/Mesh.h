@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include <string>
 #include <vector>
+#include "Pool.h"
 
 struct MeshVertex {
 	DirectX::XMFLOAT3  position;
@@ -58,3 +59,7 @@ bool LoadMesh(
 	std::vector<Mesh>& meshes,
 	std::vector<Material>& materials
 );
+
+struct AAA {
+	Pool<int32_t> aaa;
+};
