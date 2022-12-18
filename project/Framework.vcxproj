@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\App.h" />
+    <ClInclude Include="..\include\ComPtr.h" />
     <ClInclude Include="..\include\DescriptorPool.h" />
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
