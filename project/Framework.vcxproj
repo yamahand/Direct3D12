@@ -21,14 +21,21 @@
   <ItemGroup>
     <ClInclude Include="..\include\App.h" />
     <ClInclude Include="..\include\ComPtr.h" />
+    <ClInclude Include="..\include\ConstantBuffer.h" />
     <ClInclude Include="..\include\DescriptorPool.h" />
+    <ClInclude Include="..\include\Material.h" />
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
+    <ClInclude Include="..\include\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\App.cpp" />
+    <ClCompile Include="..\src\ConstantBuffer.cpp" />
+    <ClCompile Include="..\src\DescriptorPool.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\Material.cpp" />
     <ClCompile Include="..\src\Mesh.cpp" />
+    <ClCompile Include="..\src\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

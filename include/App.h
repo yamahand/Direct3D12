@@ -34,7 +34,7 @@ struct alignas(256) Transform {
 	DirectX::XMMATRIX	proj;
 };
 
-struct Texture {
+struct Texture_ {
 	ComPtr<ID3D12Resource>	pResource;
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
@@ -100,7 +100,7 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
 
-	Texture							m_texture;		//!< テクスチャ
+	Texture_							m_texture;		//!< テクスチャ
 	std::vector<Mesh>				m_meshes;		//!< メッシュ
 	std::vector<Material>			m_materials;	//!< マテリアル
 
