@@ -29,12 +29,12 @@ namespace {
 		bool Load(
 			const wchar_t* fileName,
 			std::vector<Mesh>& meshes,
-			std::vector<Material>& materials
+			std::vector<Material_>& materials
 		);
 
 	private:
 		void ParseMesh(Mesh& dstMesh, const aiMesh* pSrcMesh);
-		void ParseMaterial(Material& dstMaterial, const aiMaterial* pSrcMaterial);
+		void ParseMaterial(Material_& dstMaterial, const aiMaterial* pSrcMaterial);
 	};
 
 	MeshLoader::MeshLoader(){}
@@ -43,7 +43,7 @@ namespace {
 	bool MeshLoader::Load(
 		const wchar_t* fileName,
 		std::vector<Mesh>& meshes,
-		std::vector<Material>& materials
+		std::vector<Material_>& materials
 	) {
 		if (fileName == nullptr) return false;
 
@@ -142,7 +142,7 @@ namespace {
 	/// </summary>
 	/// <param name="dstMaterial"></param>
 	/// <param name="pSrcMaterial"></param>
-	void MeshLoader::ParseMaterial(Material& dstMaterial, const aiMaterial* pSrcMaterial) {
+	void MeshLoader::ParseMaterial(Material_& dstMaterial, const aiMaterial* pSrcMaterial) {
 		// ŠgŽU”½ŽË
 		{
 			aiColor3D color(0.0f, 0.0f, 0.0f);
@@ -214,7 +214,7 @@ const D3D12_INPUT_LAYOUT_DESC MeshVertex::InputLayout = {
 };
 static_assert(sizeof(MeshVertex) == 44, "Vertex struct/layout missmatch");
 
-bool LoadMesh(const wchar_t* fileName, std::vector<Mesh>& meshes, std::vector<Material>& materials)
+bool LoadMesh(const wchar_t* fileName, std::vector<Mesh>& meshes, std::vector<Material_>& materials)
 {
 	MeshLoader loader;
 	return loader.Load(fileName, meshes, materials);

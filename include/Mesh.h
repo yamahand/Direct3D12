@@ -33,7 +33,7 @@ private:
 	static const D3D12_INPUT_ELEMENT_DESC InputElements[InputElementCount];
 };
 
-struct Material {
+struct Material_ {
 	DirectX::XMFLOAT3 diffuse;		//!< ŠgŽU”½ŽË¬•ª
 	DirectX::XMFLOAT3 specular;		//!< ‹¾–Ê”½ŽË¬•ª
 	float alpha;					//!< “§‰ß¬•ª
@@ -57,7 +57,7 @@ struct Mesh {
 bool LoadMesh(
 	const wchar_t* fileName,
 	std::vector<Mesh>& meshes,
-	std::vector<Material>& materials
+	std::vector<Material_>& materials
 );
 
 struct AAA {

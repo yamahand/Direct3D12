@@ -102,7 +102,7 @@ private:
 
 	Texture_							m_texture;		//!< テクスチャ
 	std::vector<Mesh>				m_meshes;		//!< メッシュ
-	std::vector<Material>			m_materials;	//!< マテリアル
+	std::vector<Material_>			m_materials;	//!< マテリアル
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
 	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
