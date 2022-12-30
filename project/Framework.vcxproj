@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\App.h" />
+    <ClInclude Include="..\include\ColorTarget.h" />
+    <ClInclude Include="..\include\CommandList.h" />
     <ClInclude Include="..\include\ComPtr.h" />
     <ClInclude Include="..\include\ConstantBuffer.h" />
     <ClInclude Include="..\include\DescriptorPool.h" />
@@ -31,6 +33,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\App.cpp" />
+    <ClCompile Include="..\src\ColorTarget.cpp" />
+    <ClCompile Include="..\src\CommandList.cpp" />
     <ClCompile Include="..\src\ConstantBuffer.cpp" />
     <ClCompile Include="..\src\DescriptorPool.cpp" />
     <ClCompile Include="..\src\FileUtil.cpp" />
