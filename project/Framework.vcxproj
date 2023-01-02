@@ -25,6 +25,7 @@
     <ClInclude Include="..\include\ComPtr.h" />
     <ClInclude Include="..\include\ConstantBuffer.h" />
     <ClInclude Include="..\include\DescriptorPool.h" />
+    <ClInclude Include="..\include\Fence.h" />
     <ClInclude Include="..\include\FileUtil.h" />
     <ClInclude Include="..\include\Material.h" />
     <ClInclude Include="..\include\Mesh.h" />
@@ -32,11 +33,14 @@
     <ClInclude Include="..\include\Texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\include\DepthTarget.h" />
     <ClCompile Include="..\src\App.cpp" />
     <ClCompile Include="..\src\ColorTarget.cpp" />
     <ClCompile Include="..\src\CommandList.cpp" />
     <ClCompile Include="..\src\ConstantBuffer.cpp" />
+    <ClCompile Include="..\src\DepthTarget.cpp" />
     <ClCompile Include="..\src\DescriptorPool.cpp" />
+    <ClCompile Include="..\src\Fence.cpp" />
     <ClCompile Include="..\src\FileUtil.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\Material.cpp" />
