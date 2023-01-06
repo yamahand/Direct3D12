@@ -27,10 +27,12 @@
     <ClInclude Include="..\include\DescriptorPool.h" />
     <ClInclude Include="..\include\Fence.h" />
     <ClInclude Include="..\include\FileUtil.h" />
+    <ClInclude Include="..\include\IndexBuffer.h" />
     <ClInclude Include="..\include\Material.h" />
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
     <ClInclude Include="..\include\Texture.h" />
+    <ClInclude Include="..\include\VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\include\DepthTarget.h" />
@@ -42,10 +44,12 @@
     <ClCompile Include="..\src\DescriptorPool.cpp" />
     <ClCompile Include="..\src\Fence.cpp" />
     <ClCompile Include="..\src\FileUtil.cpp" />
+    <ClCompile Include="..\src\IndexBuffer.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\Material.cpp" />
     <ClCompile Include="..\src\Mesh.cpp" />
     <ClCompile Include="..\src\Texture.cpp" />
+    <ClCompile Include="..\src\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
