@@ -179,7 +179,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\a1829\source\repos\Framework\project\packages\Assimp_native_4.1_v142.4.1.0\build\native\lib\x64-Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\a1829\source\repos\Framework\project\packages\Assimp_native_4.1_v142.4.1.0\build\native\lib\x64-Debug;$(MSBuildProjectDirectory)\packages\Assimp_native_4.1_v142.4.1.0\build\native\lib\x64-Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>

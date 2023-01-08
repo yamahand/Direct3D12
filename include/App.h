@@ -1,44 +1,26 @@
 #pragma once
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif // !NOMINMAX
-
 #include <Windows.h>
 #include <cstdint>
+#include <array>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <wrl/client.h>
-#include <DirectXMath.h>
 #include <d3dcompiler.h>
-#include "ResMesh.h"
+
+#include <ComPtr.h>
+#include <DescriptorPool.h>
+#include <ColorTarget.h>
+#include <DepthTarget.h>
+#include <CommandList.h>
+#include <Fence.h>
+#include <Mesh.h>
+#include <Texture.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
-template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-template<typename T>
-struct ConstantBufferView {
-	D3D12_CONSTANT_BUFFER_VIEW_DESC desc;		// 定数バッファ構成設定
-	D3D12_CPU_DESCRIPTOR_HANDLE		handleCPU;	// CPUディスクリプタハンドル
-	D3D12_GPU_DESCRIPTOR_HANDLE		handleGPU;	// GPUディスクリプタハンドル
-	T* pBuffer;		// バッファの先頭へのポインタ
-};
-
-struct alignas(256) Transform {
-	DirectX::XMMATRIX	world;
-	DirectX::XMMATRIX	view;
-	DirectX::XMMATRIX	proj;
-};
-
-struct Texture_ {
-	ComPtr<ID3D12Resource>	pResource;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
-};
 
 class App
 {
@@ -47,6 +29,15 @@ public:
 	~App();
 
 	void Run();
+
+protected:
+	enum POOL_TYPE {
+		POOL_TYPE_RES,	// CBV/SRV/UAV
+		POOL_TYPE_SMP,	// Sampler
+		POOL_TYPE_RTV,	// RTV
+		POOL_TYPE_DSV,	// DSV
+		POOL_COUNT,
+	};
 
 private:
 	bool InitApp();
@@ -70,7 +61,7 @@ private:
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 private:
-	static const uint32_t FrameCount = 2;	//!< フレームバッファ数
+	static constexpr uint32_t FrameCount = 2;	//!< フレームバッファ数
 
 	HINSTANCE m_instance;	//!< インスタンスハンドル
 	HWND m_hwnd;			//!< ウインドウハンドル
@@ -80,35 +71,13 @@ private:
 	ComPtr<ID3D12Device> m_pDevice;	//!< デバイス
 	ComPtr<ID3D12CommandQueue> m_pQueue;	//!< コマンドキュー
 	ComPtr<IDXGISwapChain3> m_pSwapChain;	//!< スワップチェイン
-	ComPtr<ID3D12Resource> m_pColorBuffer[FrameCount];	//!< カラーバッファ
-	ComPtr<ID3D12Resource> m_pDepthBuffer;	//!< デプスバッファ
-	ComPtr<ID3D12CommandAllocator> m_pCmdAllocator[FrameCount];	//!< コマンドアロケータ
-	ComPtr<ID3D12GraphicsCommandList> m_pCmdList;	//!< コマンドリスト
-	ComPtr<ID3D12DescriptorHeap> m_pHeapRTV;	//!< レンダーターゲットディスクリプタヒープ
-	ComPtr<ID3D12DescriptorHeap> m_pHeapDSV;	//!< デプスステンシルディスクリプタヒープ
-	ComPtr<ID3D12Fence> m_pFence;	//!< フェンス
-	ComPtr<ID3D12DescriptorHeap>	m_pHeapCbvSrvUav;	// ディスクリプタヒープ(定数バッファ・シェーダリソースビュー・アンオーダードアクセスビュー)
-	ComPtr<ID3D12Resource>			m_pVB;		// 頂点バッファ
-	ComPtr<ID3D12Resource>			m_pIB;		// インデックスバッファ
-	ComPtr<ID3D12Resource>			m_pCB[FrameCount];	// 定数バッファ
-	ComPtr<ID3D12RootSignature>		m_pRootSignature;	// ルートシグネチャ
-	ComPtr<ID3D12PipelineState>		m_pPSO;				// パイプラインステートオブジェクト
-
-	HANDLE m_fenceEvent = {};			//!< フェンスイベント
-	uint64_t m_fenceCounter[FrameCount] = {};	//!< フェンスカウンター
-	uint32_t m_frameIndex = 0;					//!< フレームインデックス
-	D3D12_CPU_DESCRIPTOR_HANDLE m_handleRTV[FrameCount] = {};	//!< レンダーターゲット用CPUディスクリプタ
-	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
-
-	Texture_							m_texture;		//!< テクスチャ
-	std::vector<ResMesh>				m_meshes;		//!< メッシュ
-	std::vector<ResMaterial>			m_materials;	//!< マテリアル
-
-	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
-	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
+	std::array<ColorTarget, FrameCount> m_colorTargets = {};	//!< カラーターゲット
+	DepthTarget m_depthTarget;	//!< 深度ターゲット
+	std::array<DescriptorPool*, POOL_COUNT> m_pPools;	//!< ディスクリプタプール
+	CommandList m_commandList;	//!< コマンドリスト
+	Fence m_fence;	//!< フェンス
+	uint32_t m_frameIndex;	//!< フレームインデックス
 	D3D12_VIEWPORT					m_viewport;	// ビューポート
 	D3D12_RECT						m_scissor;	// シザー矩形
-	ConstantBufferView<Transform>	m_CBV[FrameCount];
-	float							m_rotateAngle;	// 回転角
 };
 

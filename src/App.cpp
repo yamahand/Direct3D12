@@ -4,6 +4,7 @@
 #include "VertexTypes.h"
 #include "ResMesh.h"
 #include <cassert>
+#include "DescriptorPool.h"
 
 namespace {
 	const auto ClassName = TEXT("SampleWindowClass");
@@ -194,7 +195,7 @@ bool App::InitD3D()
 		desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		desc.NodeMask = 0;
 
-		hr = m_pDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_pQueue));
+		hr = m_pDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(m_pQueue.GetAddressOf()));
 		if (FAILED(hr))
 			return false;
 	}
@@ -202,8 +203,8 @@ bool App::InitD3D()
 	// スワップチェインの生成
 	{
 		// DXGIファクトリーの生成
-		IDXGIFactory4* pFactory = nullptr;
-		hr = CreateDXGIFactory1(IID_PPV_ARGS(&pFactory));
+		ComPtr<IDXGIFactory4> pFactory = nullptr;
+		hr = CreateDXGIFactory1(IID_PPV_ARGS(pFactory.GetAddressOf()));
 		if (FAILED(hr))
 			return false;
 
@@ -226,26 +227,36 @@ bool App::InitD3D()
 		desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		// スワップチェインの生成
-		IDXGISwapChain* pSwapChain = nullptr;
-		hr = pFactory->CreateSwapChain(m_pQueue.Get(), &desc, &pSwapChain);
+		ComPtr<IDXGISwapChain> pSwapChain;
+		hr = pFactory->CreateSwapChain(m_pQueue.Get(), &desc, pSwapChain.GetAddressOf());
 		if (FAILED(hr)) {
-			SafeRelease(pFactory);
 			return false;
 		}
 
 		// IDXGISwapChain3を取得
-		hr = pSwapChain->QueryInterface(IID_PPV_ARGS(&m_pSwapChain));
+		hr = pSwapChain.As(&m_pSwapChain);
 		if (FAILED(hr)) {
-			SafeRelease(pFactory);
-			SafeRelease(pSwapChain);
 			return false;
 		}
 
 		// バックバッファインデックスを取得
 		m_frameIndex = m_pSwapChain->GetCurrentBackBufferIndex();
 
-		SafeRelease(pFactory);
-		SafeRelease(pSwapChain);
+		pFactory.Reset();
+		pSwapChain.Reset();
+	}
+
+	// ディスクリプタプール作成
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+
+		desc.NodeMask = 1;
+		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		desc.NumDescriptors = 512;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		if (!DescriptorPool::Create(m_pDevice.Get(), &desc, &m_pPools[POOL_TYPE_RES])) {
+			return false;
+		}
 	}
 
 	// コマンドアロケータの生成
