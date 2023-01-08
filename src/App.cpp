@@ -2,7 +2,7 @@
 #include "ResourceUploadBatch.h"
 #include "DDSTextureLoader.h"
 #include "VertexTypes.h"
-#include "Mesh.h"
+#include "ResMesh.h"
 #include <cassert>
 
 namespace {
@@ -54,17 +54,6 @@ void App::Run() {
 /// </summary>
 /// <returns>初期化に成功したか</returns>
 bool App::InitApp() {
-#if defined(DEBUG) || defined(_DEBUG)
-	{
-		ComPtr<ID3D12Debug> debug;
-		auto hr = D3D12GetDebugInterface(IID_PPV_ARGS(debug.GetAddressOf()));
-
-		// デバッグレイヤーを有効化
-		if (SUCCEEDED(hr)) {
-			debug->EnableDebugLayer();
-		}
-	}
-#endif
 
 	// ウインドウの初期化
 	if (!InitWnd()) {
@@ -78,6 +67,15 @@ bool App::InitApp() {
 	if (!OnInit()) {
 		return false;
 	}
+
+	// ウインドウ表示
+	ShowWindow(m_hwnd, SW_SHOWNORMAL);
+
+	// ウインドウを更新
+	UpdateWindow(m_hwnd);
+
+	// ウインドウにフォーカスを設定
+	SetFocus(m_hwnd);
 
 	return true;
 }
@@ -149,15 +147,6 @@ bool App::InitWnd() {
 		return false;
 	}
 
-	// ウインドウ表示
-	ShowWindow(m_hwnd, SW_SHOWNORMAL);
-
-	// ウインドウを更新
-	UpdateWindow(m_hwnd);
-
-	// ウインドウにフォーカスを設定
-	SetFocus(m_hwnd);
-
 	return true;
 }
 
@@ -176,6 +165,17 @@ void App::TermWnd() {
 
 bool App::InitD3D()
 {
+#if defined(DEBUG) || defined(_DEBUG)
+	{
+		ComPtr<ID3D12Debug> debug;
+		auto hr = D3D12GetDebugInterface(IID_PPV_ARGS(debug.GetAddressOf()));
+
+		// デバッグレイヤーを有効化
+		if (SUCCEEDED(hr)) {
+			debug->EnableDebugLayer();
+		}
+	}
+#endif
 	// デバイスの生成
 	auto hr = D3D12CreateDevice(
 		nullptr,

@@ -11,7 +11,7 @@
 #include <wrl/client.h>
 #include <DirectXMath.h>
 #include <d3dcompiler.h>
-#include "Mesh.h"
+#include "ResMesh.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -101,8 +101,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_handleDSV = {};	//!< デプスステンシル用CPUディスクリプタ
 
 	Texture_							m_texture;		//!< テクスチャ
-	std::vector<Mesh>				m_meshes;		//!< メッシュ
-	std::vector<Material_>			m_materials;	//!< マテリアル
+	std::vector<ResMesh>				m_meshes;		//!< メッシュ
+	std::vector<ResMaterial>			m_materials;	//!< マテリアル
 
 	D3D12_VERTEX_BUFFER_VIEW		m_VBV;	// 頂点バッファビュー
 	D3D12_INDEX_BUFFER_VIEW			m_ibv;	// インデックスバッファビュー
