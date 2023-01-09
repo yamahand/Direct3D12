@@ -40,7 +40,7 @@ bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* 
 		batch,
 		fileName,
 		m_pTex.GetAddressOf(),
-		true,
+		false,
 		0,
 		nullptr,
 		&isCube);
@@ -141,6 +141,8 @@ D3D12_SHADER_RESOURCE_VIEW_DESC Texture::GetViewDesc(bool isCube)
 {
 	auto desc = m_pTex->GetDesc();
 	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+	viewDesc.Format = desc.Format;
+	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 	switch (desc.Dimension)
 	{

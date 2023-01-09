@@ -29,6 +29,8 @@ bool CommandList::Init(ID3D12Device* pDevice, D3D12_COMMAND_LIST_TYPE type, uint
 		if (FAILED(hr)) {
 			return false;
 		}
+
+		m_pCmdList->Close();
 	}
 
 	m_index = 0;

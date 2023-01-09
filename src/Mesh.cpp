@@ -19,7 +19,7 @@ bool Mesh::Init(ID3D12Device* pDevice, const ResMesh& resource)
 		return false;
 	}
 
-	if (!m_ib.Init(pDevice, sizeof(MeshVertex) * resource.indices.size(), resource.indices.data())) {
+	if (!m_ib.Init(pDevice, sizeof(uint32_t) * resource.indices.size(), resource.indices.data())) {
 		return false;
 	}
 

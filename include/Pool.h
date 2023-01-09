@@ -33,7 +33,7 @@ public:
 		m_capacity = count;
 
 		// インデックスを振る
-		for (auto i = 2u, j = 0u; i < m_count + 2; i++, j++)
+		for (auto i = 2u, j = 0u; i < m_capacity + 2; i++, j++)
 		{
 			auto item = GetItem(i);
 			item->m_index = j;

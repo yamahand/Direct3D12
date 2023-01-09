@@ -49,18 +49,20 @@ private:
 	bool InitD3D();
 	void TermD3D();
 
-	void Render();
-	void WaitGpu();
+protected:
+
 	void Present(uint32_t interval);
 
-	bool OnInit();
-	void OnTerm();
+	virtual bool OnInit() { return true; }
+	virtual void OnTerm() {}
+	virtual void OnRender() {}
+	virtual void OnMsgProc(HWND, UINT, WPARAM, LPARAM) {}
 
 	void MainLoop();
 
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
-private:
+protected:
 	static constexpr uint32_t FrameCount = 2;	//!< フレームバッファ数
 
 	HINSTANCE m_instance;	//!< インスタンスハンドル
@@ -72,7 +74,7 @@ private:
 	ComPtr<ID3D12CommandQueue> m_pQueue;	//!< コマンドキュー
 	ComPtr<IDXGISwapChain3> m_pSwapChain;	//!< スワップチェイン
 	std::array<ColorTarget, FrameCount> m_colorTargets = {};	//!< カラーターゲット
-	DepthTarget m_depthTarget;	//!< 深度ターゲット
+	DepthTarget m_depthTarget = {};	//!< 深度ターゲット
 	std::array<DescriptorPool*, POOL_COUNT> m_pPools;	//!< ディスクリプタプール
 	CommandList m_commandList;	//!< コマンドリスト
 	Fence m_fence;	//!< フェンス

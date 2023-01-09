@@ -7,8 +7,8 @@
 
 class DescriptorHandle {
 public :
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU;
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = { 0 };
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = { 0 };
 
 	bool HasCPU() const { return handleCPU.ptr != 0; }
 	bool HasGPU() const { return handleGPU.ptr != 0; }

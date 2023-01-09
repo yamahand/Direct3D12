@@ -36,7 +36,7 @@ DescriptorHandle* DescriptorPool::AllocHandle() {
 		handleCPU.ptr += m_descriptorSize * index;
 
 		auto handleGPU = m_pHeap->GetGPUDescriptorHandleForHeapStart();
-		handleGPU.ptr = m_descriptorSize * index;
+		handleGPU.ptr += m_descriptorSize * index;
 
 		pHandle->handleCPU = handleCPU;
 		pHandle->handleGPU = handleGPU;

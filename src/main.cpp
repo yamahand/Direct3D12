@@ -1,4 +1,4 @@
-#include "App.h"
+#include "SampleApp.h"
 
 #if defined(DEBUG) || defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t** argv, wchar_t** envp) {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(142);
 #endif
-	App app(960, 540);
+	SampleApp app(960, 540);
 	app.Run();
 
 	return 0;

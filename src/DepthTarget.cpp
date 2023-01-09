@@ -39,6 +39,7 @@ bool DepthTarget::Init(ID3D12Device* pDevice, DescriptorPool* pPoolDSV, uint32_t
 	desc.Alignment = 0;
 	desc.Width = UINT64(width);
 	desc.Height = height;
+	desc.DepthOrArraySize = 1;
 	desc.Format = format;
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
