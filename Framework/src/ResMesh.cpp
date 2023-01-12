@@ -7,8 +7,6 @@
 #include <cassert>
 
 
-#pragma comment(lib, "assimp-vc142-mtd.lib")
-
 namespace {
 
 	std::string ToUTF8(const std::wstring& value) {

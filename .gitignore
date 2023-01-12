@@ -55,3 +55,5 @@ project/x64
 # format (NuGet v4 and .NET Core).
 project.lock.json
 project.assets.json
+Framework/project/x64
+App/project/x64

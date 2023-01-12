@@ -300,7 +300,7 @@ void SampleApp::OnRender()
 {
 	// XVˆ—
 	{
-		m_rotateAngle += 0.025;
+		m_rotateAngle += 0.025f;
 
 		auto pTransform = m_transform[m_frameIndex]->GetPtr<Transform>();
 		pTransform->world = DirectX::XMMatrixRotationY(m_rotateAngle);
