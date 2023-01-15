@@ -4,12 +4,25 @@
 #include "DirectXHelpers.h"
 #include "Logger.h"
 #include "InlineUtil.h"
+#include "SimpleMath.h"
+
+using namespace DirectX::SimpleMath;
 
 namespace {
 	struct Transform {
-		DirectX::XMMATRIX world;
-		DirectX::XMMATRIX view;
-		DirectX::XMMATRIX proj;
+		Matrix world;
+		Matrix view;
+		Matrix proj;
+	};
+
+	struct LightBuffer {
+		Vector4 lightPosition;	//!< ライト位置
+		Color lightColor;		//!< ライトカラー
+	};
+
+	struct MaterialBuffer {
+		Vector3 diffuse;		//!< 拡散反射率
+		float alpha;			//!< 透過度
 	};
 }
 
@@ -46,6 +59,9 @@ bool SampleApp::OnInit()
 		}
 
 		// メモリを予約
+		m_pMesh.reserve(resMesh.size());
+
+		// メッシュを初期化
 		for (size_t i = 0; i < resMesh.size(); i++)
 		{
 			// メッシュ生成
@@ -72,7 +88,7 @@ bool SampleApp::OnInit()
 		m_pMesh.shrink_to_fit();
 
 		// マテリアル初期化
-		if (!m_material.Init(m_pDevice.Get(), m_pPools[POOL_TYPE_RES], 0, resMaterial.size())) {
+		if (!m_material.Init(m_pDevice.Get(), m_pPools[POOL_TYPE_RES], sizeof(MaterialBuffer), resMaterial.size())) {
 			ELOG("Error : Material::Init() Failed.");
 			return false;
 		}
@@ -86,6 +102,10 @@ bool SampleApp::OnInit()
 		// テクスチャ設定
 		for (size_t i = 0; i < resMaterial.size(); i++)
 		{
+			auto ptr = m_material.GetBufferPtr<MaterialBuffer>(i);
+			ptr->diffuse = resMaterial[i].diffuse;
+			ptr->alpha = resMaterial[i].alpha;
+
 			std::wstring path = dir + resMaterial[i].diffuseMap;
 			m_material.SetTexture(i, TU_DIFFUSE, path, batch);
 		}
@@ -95,6 +115,26 @@ bool SampleApp::OnInit()
 
 		// バッチ完了を待機
 		future.wait();
+	}
+
+	//　ライトバッファ設定
+	{
+		auto pCB = new (std::nothrow) ConstantBuffer();
+		if (pCB == nullptr) {
+			ELOG("Error: Out of memory.");
+			return false;
+		}
+
+		if (!pCB->Init(m_pDevice.Get(), m_pPools[POOL_TYPE_RES], sizeof(LightBuffer))) {
+			ELOG("Error : ConstantBuffer::Init() Failed.");
+			return false;
+		}
+
+		auto ptr = pCB->GetPtr<LightBuffer>();
+		ptr->lightPosition = Vector4(0.0f, 50.0f, 100.0f, 0.0f);
+		ptr->lightColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+		m_pLight = pCB;
 	}
 
 	// ルートシグネチャ生成
@@ -113,36 +153,33 @@ bool SampleApp::OnInit()
 		range.OffsetInDescriptorsFromTableStart = 0;
 
 		// ルートパラメータの設定
-		D3D12_ROOT_PARAMETER param[2] = {};
+		D3D12_ROOT_PARAMETER param[4] = {};
 		param[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		param[0].Descriptor.ShaderRegister = 0;
 		param[0].Descriptor.RegisterSpace = 0;
 		param[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-		param[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		param[1].DescriptorTable.NumDescriptorRanges = 1;
-		param[1].DescriptorTable.pDescriptorRanges = &range;
+		param[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param[1].Descriptor.ShaderRegister = 1;
+		param[1].Descriptor.RegisterSpace = 0;
 		param[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+		param[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param[2].Descriptor.ShaderRegister = 2;
+		param[2].Descriptor.RegisterSpace = 0;
+		param[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		param[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param[3].DescriptorTable.NumDescriptorRanges = 1;
+		param[3].DescriptorTable.pDescriptorRanges = &range;
+		param[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 		// スタティックサンプラーの設定
-		D3D12_STATIC_SAMPLER_DESC sampler = {};
-		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		sampler.MipLODBias = D3D12_DEFAULT_MIP_LOD_BIAS;
-		sampler.MaxAnisotropy = 1;
-		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-		sampler.MinLOD = -D3D12_FLOAT32_MAX;
-		sampler.MaxLOD = +D3D12_FLOAT32_MAX;
-		sampler.ShaderRegister = 0;
-		sampler.RegisterSpace = 0;
-		sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		auto sampler = DirectX::CommonStates::StaticLinearWrap(0, D3D12_SHADER_VISIBILITY_PIXEL);
 
 		// ルートシグネチャの設定
 		D3D12_ROOT_SIGNATURE_DESC desc = {};
-		desc.NumParameters = 2;
+		desc.NumParameters = _countof(param);
 		desc.NumStaticSamplers = 1;
 		desc.pParameters = param;
 		desc.pStaticSamplers = &sampler;
@@ -179,13 +216,13 @@ bool SampleApp::OnInit()
 		std::wstring psPath;
 
 		// 頂点シェーダを検索
-		if (!SearchFilePath(L"SimpleTexVS.cso", vsPath)) {
+		if (!SearchFilePath(L"LambertVS.cso", vsPath)) {
 			ELOG("Error : Vertex Shader Not Found.");
 			return false;
 		}
 
 		// ピクセルシェーダを検索
-		if (!SearchFilePath(L"SimpleTexPS.cso", psPath)) {
+		if (!SearchFilePath(L"LambertPS.cso", psPath)) {
 			ELOG("Error : Pixel Shader Not Found.");
 			return false;
 		}
@@ -251,9 +288,9 @@ bool SampleApp::OnInit()
 			}
 
 			// カメラ設定
-			auto eyePos = DirectX::XMVectorSet(0.0f, 1.0f, 2.0f, 0.0f);
-			auto targetPos = DirectX::XMVectorZero();
-			auto upward = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+			auto eyePos = Vector3(0.0f, 1.0f, 2.0f);
+			auto targetPos = Vector3::Zero;
+			auto upward = Vector3::UnitY;
 
 			// 垂直が核とアスペクト比の設定
 			auto fovy = DirectX::XMConvertToRadians(37.5f);
@@ -261,14 +298,14 @@ bool SampleApp::OnInit()
 
 			// 変換行列を設定
 			auto ptr = pCB->GetPtr<Transform>();
-			ptr->world = DirectX::XMMatrixIdentity();
-			ptr->view = DirectX::XMMatrixLookAtRH(eyePos, targetPos, upward);
-			ptr->proj = DirectX::XMMatrixPerspectiveFovRH(fovy, aspect, 1.0f, 1000.0f);
+			ptr->world = Matrix::Identity;
+			ptr->view = Matrix::CreateLookAt(eyePos, targetPos, upward);
+			ptr->proj = Matrix::CreatePerspectiveFieldOfView(fovy, aspect, 1.0f, 1000.0f);
 
 			m_transform.push_back(pCB);
 		}
 
-		m_rotateAngle = 0.0f;
+		m_rotateAngle = DirectX::XMConvertToRadians(-60.0f);
 	}
 
 	return true;
@@ -341,6 +378,7 @@ void SampleApp::OnRender()
 		pCmd->SetGraphicsRootSignature(m_pRootSig.Get());
 		pCmd->SetDescriptorHeaps(1, pHeaps);
 		pCmd->SetGraphicsRootConstantBufferView(0, m_transform[m_frameIndex]->GetAddress());
+		pCmd->SetGraphicsRootConstantBufferView(1, m_pLight->GetAddress());
 		pCmd->SetPipelineState(m_pPSO.Get());
 		pCmd->RSSetViewports(1, &m_viewport);
 		pCmd->RSSetScissorRects(1, &m_scissor);
@@ -350,8 +388,11 @@ void SampleApp::OnRender()
 			// マテリアルIDを取得
 			auto id = m_pMesh[i]->GetMaterialId();
 
+			// 定数バッファを設定
+			pCmd->SetGraphicsRootConstantBufferView(2, m_material.GetBufferAddress(i));
+
 			// テクスチャ設定
-			pCmd->SetGraphicsRootDescriptorTable(1, m_material.GetTextureHandle(id, TU_DIFFUSE));
+			pCmd->SetGraphicsRootDescriptorTable(3, m_material.GetTextureHandle(id, TU_DIFFUSE));
 
 			// メッシュを描画
 			m_pMesh[i]->Draw(pCmd);

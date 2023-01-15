@@ -20,6 +20,7 @@ private:
 private:
 	std::vector<Mesh*>	m_pMesh;
 	std::vector<ConstantBuffer*>	m_transform;
+	ConstantBuffer* m_pLight = nullptr;
 	Material	m_material;
 	ComPtr<ID3D12PipelineState>	m_pPSO;
 	ComPtr<ID3D12RootSignature>	m_pRootSig;
