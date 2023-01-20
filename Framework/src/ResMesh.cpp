@@ -226,7 +226,7 @@ namespace {
 		// シャイネスマップ
 		{
 			aiString path;
-			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SHININESS(0), path)) {
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SHININESS(0), path) == aiReturn_SUCCESS) {
 				dstMaterial.shininessMap = Convert(path);
 			}
 			else {
@@ -237,11 +237,11 @@ namespace {
 		// 法線マップ
 		{
 			aiString path;
-			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_NORMALS(0), path)) {
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_NORMALS(0), path) == aiReturn_SUCCESS) {
 				dstMaterial.normalMap = Convert(path);
 			}
 			else {
-				if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_HEIGHT(0), path)) {
+				if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_HEIGHT(0), path) == aiReturn_SUCCESS) {
 					dstMaterial.normalMap = Convert(path);
 				}
 				else {
