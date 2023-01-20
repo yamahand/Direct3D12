@@ -237,13 +237,15 @@ bool SampleApp::OnInit()
 		std::wstring psPath;
 
 		// 頂点シェーダを検索
-		if (!SearchFilePath(L"LambertVS.cso", vsPath)) {
+		auto* vertexShader = L"BumpVS.cso";
+		if (!SearchFilePath(vertexShader, vsPath)) {
 			ELOG("Error : Vertex Shader Not Found.");
 			return false;
 		}
 
 		// ピクセルシェーダを検索
-		if (!SearchFilePath(L"LambertPS.cso", psPath)) {
+		auto* pixelShderName = L"BumpPS.cso";
+		if (!SearchFilePath(pixelShderName, psPath)) {
 			ELOG("Error : Pixel Shader Not Found.");
 			return false;
 		}
