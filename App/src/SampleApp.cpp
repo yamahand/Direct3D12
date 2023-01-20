@@ -18,11 +18,14 @@ namespace {
 	struct LightBuffer {
 		Vector4 lightPosition;	//!< ライト位置
 		Color lightColor;		//!< ライトカラー
+		Vector4 cameraPos;		//!< カメラ位置
 	};
 
 	struct MaterialBuffer {
 		Vector3 diffuse;		//!< 拡散反射率
 		float alpha;			//!< 透過度
+		Vector3 specular;		//!< 鏡面反射
+		float shininess;		//!< 鏡面反射強度
 	};
 }
 
@@ -105,9 +108,14 @@ bool SampleApp::OnInit()
 			auto ptr = m_material.GetBufferPtr<MaterialBuffer>(i);
 			ptr->diffuse = resMaterial[i].diffuse;
 			ptr->alpha = resMaterial[i].alpha;
+			ptr->specular = resMaterial[i].specular;
+			ptr->shininess = resMaterial[i].shininess;
 
 			std::wstring path = dir + resMaterial[i].diffuseMap;
 			m_material.SetTexture(i, TU_DIFFUSE, path, batch);
+
+			std::wstring npath = dir + resMaterial[i].normalMap;
+			m_material.SetTexture(i, TU_NORMAL, npath, batch);
 		}
 
 		// バッチ終了
@@ -133,6 +141,7 @@ bool SampleApp::OnInit()
 		auto ptr = pCB->GetPtr<LightBuffer>();
 		ptr->lightPosition = Vector4(0.0f, 50.0f, 100.0f, 0.0f);
 		ptr->lightColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
+		ptr->cameraPos = Vector4(0.0f, 1.0f, 2.0f, 0.0f);
 
 		m_pLight = pCB;
 	}
@@ -145,15 +154,21 @@ bool SampleApp::OnInit()
 		flag |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
 		// ディスクリプタレンジを設定
-		D3D12_DESCRIPTOR_RANGE range = {};
-		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		range.NumDescriptors = 1;
-		range.BaseShaderRegister = 0;
-		range.RegisterSpace = 0;
-		range.OffsetInDescriptorsFromTableStart = 0;
+		D3D12_DESCRIPTOR_RANGE range[2] = {};
+		range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		range[0].NumDescriptors = 1;
+		range[0].BaseShaderRegister = 0;
+		range[0].RegisterSpace = 0;
+		range[0].OffsetInDescriptorsFromTableStart = 0;
+
+		range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		range[1].NumDescriptors = 1;
+		range[1].BaseShaderRegister = 1;
+		range[1].RegisterSpace = 0;
+		range[1].OffsetInDescriptorsFromTableStart = 0;
 
 		// ルートパラメータの設定
-		D3D12_ROOT_PARAMETER param[4] = {};
+		D3D12_ROOT_PARAMETER param[5] = {};
 		param[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		param[0].Descriptor.ShaderRegister = 0;
 		param[0].Descriptor.RegisterSpace = 0;
@@ -171,8 +186,13 @@ bool SampleApp::OnInit()
 
 		param[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		param[3].DescriptorTable.NumDescriptorRanges = 1;
-		param[3].DescriptorTable.pDescriptorRanges = &range;
+		param[3].DescriptorTable.pDescriptorRanges = &range[0];
 		param[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		param[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param[4].DescriptorTable.NumDescriptorRanges = 1;
+		param[4].DescriptorTable.pDescriptorRanges = &range[1];
+		param[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		// スタティックサンプラーの設定
 		auto sampler = DirectX::CommonStates::StaticLinearWrap(0, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -195,6 +215,7 @@ bool SampleApp::OnInit()
 			pBlob.GetAddressOf(),
 			pErrorBlob.GetAddressOf());
 		if (FAILED(hr)) {
+			ELOG("%s", (char*)pErrorBlob->GetBufferPointer());
 			return false;
 		}
 
@@ -393,6 +414,7 @@ void SampleApp::OnRender()
 
 			// テクスチャ設定
 			pCmd->SetGraphicsRootDescriptorTable(3, m_material.GetTextureHandle(id, TU_DIFFUSE));
+			pCmd->SetGraphicsRootDescriptorTable(4, m_material.GetTextureHandle(id, TU_NORMAL));
 
 			// メッシュを描画
 			m_pMesh[i]->Draw(pCmd);
