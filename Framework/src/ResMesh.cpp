@@ -193,7 +193,7 @@ namespace {
 		// ‹¾–Ê”½ŽË‹­“x
 		{
 			auto shininess = 0.0f;
-			if (pSrcMaterial->Get(AI_MATKEY_SHININESS_STRENGTH, shininess) == aiReturn_SUCCESS) {
+			if (pSrcMaterial->Get(AI_MATKEY_SHININESS, shininess) == aiReturn_SUCCESS) {
 				dstMaterial.shininess = shininess;
 			}
 			else {

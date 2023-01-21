@@ -32,7 +32,7 @@ PSOutput main(VSOutput input)
 {
 	PSOutput output = (PSOutput)0;
 
-#if 1
+#if 0
 	// 接戦空間上でライティングする時
 
 	// ライトベクトル
