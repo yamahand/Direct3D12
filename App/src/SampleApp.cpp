@@ -316,7 +316,7 @@ bool SampleApp::OnInit()
 			auto upward = Vector3::UnitY;
 
 			// 垂直が核とアスペクト比の設定
-			auto fovy = DirectX::XMConvertToRadians(37.5f);
+			constexpr float fovy = DirectX::XMConvertToRadians(37.5f);
 			auto aspect = static_cast<float>(m_width) / static_cast<float>(m_height);
 
 			// 変換行列を設定

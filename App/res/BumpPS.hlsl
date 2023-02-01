@@ -32,6 +32,10 @@ PSOutput main(VSOutput input)
 {
 	PSOutput output = (PSOutput)0;
 
+	//if (input.position.x < 480) {
+	//	discard;
+	//}
+
 #if 0
 	// 接戦空間上でライティングする時
 
@@ -65,6 +69,5 @@ PSOutput main(VSOutput input)
 	float3 s = specular * lightColor * pow(saturate(dot(l, r)), shininess);
 
 	output.color = float4(c.rgb * (d + s), c.a * alpha);
-
 	return output;
 }
