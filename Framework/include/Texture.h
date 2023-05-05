@@ -21,9 +21,10 @@ public:
 	/// <param name="pDevice">デバイス</param>
 	/// <param name="pPool">ディスクリプタプール</param>
 	/// <param name="fileName">ファイル名</param>
+	/// <param name="useSRGB">SRGBを使用するか</param>
 	/// <param name="batch">アップロードバッチ</param>
 	/// <returns>成功したらtrue</returns>
-	bool Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* fileName, DirectX::ResourceUploadBatch& batch);
+	bool Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* fileName, bool useSRGB, DirectX::ResourceUploadBatch& batch);
 
 	/// <summary>
 	/// 初期化
@@ -31,9 +32,10 @@ public:
 	/// <param name="pDevice">デバイス</param>
 	/// <param name="pPool">ディスクリプタプール</param>
 	/// <param name="pDesc">でスクリプタ</param>
+	/// <param name="useSRGB">SRGBを使用するか</param>
 	/// <param name="isCube">キューブマップか</param>
 	/// <returns>成功したらtrue</returns>
-	bool Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RESOURCE_DESC* pDesc, bool isCube);
+	bool Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RESOURCE_DESC* pDesc, bool useSRGB, bool isCube);
 
 	/// <summary>
 	/// 終了処理

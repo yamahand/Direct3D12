@@ -58,5 +58,8 @@
     <FxCompile Include="..\res\BumpVS.hlsl">
       <Filter>リソースファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\res\CookTorrancePS.hlsl">
+      <Filter>リソースファイル</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

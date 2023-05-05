@@ -24,18 +24,20 @@ public:
 	/// <param name="width">横幅</param>
 	/// <param name="height">立幅</param>
 	/// <param name="format">ピクセルフォーマット</param>
+	/// <param name="useSRGB">SRGBを使用するか</param>
 	/// <returns>初期化に成功したらtrue</returns>
-	bool Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t width, uint32_t height, DXGI_FORMAT format);
+	bool Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t width, uint32_t height, DXGI_FORMAT format, bool useSRGB);
 
 	/// <summary>
 	/// バックバッファを使って初期化
 	/// </summary>
 	/// <param name="pDevice">デバイス</param>
 	/// <param name="pPoolRTV">ディスクリプタプール(RTV用)</param>
+	/// <param name="useSRGB">SRGBを使用するか</param>
 	/// <param name="index">バックバッファインデックス</param>
 	/// <param name="pSwapChain">スワップチェイン</param>
 	/// <returns>初期化に成功したらtrue</returns>
-	bool InitFromBackBuffer(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t index, IDXGISwapChain* pSwapChain);
+	bool InitFromBackBuffer(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, bool useSRGB, uint32_t index, IDXGISwapChain* pSwapChain);
 
 	/// <summary>
 	/// 終了処理

@@ -291,7 +291,7 @@ bool App::InitD3D()
 	{
 		for (auto i = 0u; i < FrameCount; i++)
 		{
-			if (!m_colorTargets[i].InitFromBackBuffer(m_pDevice.Get(), m_pPools[POOL_TYPE_RTV], i, m_pSwapChain.Get())) {
+			if (!m_colorTargets[i].InitFromBackBuffer(m_pDevice.Get(), m_pPools[POOL_TYPE_RTV], true, i, m_pSwapChain.Get())) {
 				return false;
 			}
 		}

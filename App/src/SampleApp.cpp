@@ -22,10 +22,10 @@ namespace {
 	};
 
 	struct MaterialBuffer {
-		Vector3 diffuse;		//!< 拡散反射率
+		Vector3 baseColor;		//!< 基本色
 		float alpha;			//!< 透過度
-		Vector3 specular;		//!< 鏡面反射
-		float shininess;		//!< 鏡面反射強度
+		float roughness;			//!< 面の粗さ[0,1]
+		float metallic;		//!< 金属度[0,1]
 	};
 }
 
@@ -106,16 +106,13 @@ bool SampleApp::OnInit()
 		for (size_t i = 0; i < resMaterial.size(); i++)
 		{
 			auto ptr = m_material.GetBufferPtr<MaterialBuffer>(i);
-			ptr->diffuse = resMaterial[i].diffuse;
+			ptr->baseColor = resMaterial[i].diffuse;
 			ptr->alpha = resMaterial[i].alpha;
-			ptr->specular = resMaterial[i].specular;
-			ptr->shininess = resMaterial[i].shininess;
+			ptr->roughness = 0.2f;
+			ptr->metallic = 0.075;
 
 			std::wstring path = dir + resMaterial[i].diffuseMap;
 			m_material.SetTexture(i, TU_DIFFUSE, path, batch);
-
-			std::wstring npath = dir + resMaterial[i].normalMap;
-			m_material.SetTexture(i, TU_NORMAL, npath, batch);
 		}
 
 		// バッチ終了
@@ -237,14 +234,14 @@ bool SampleApp::OnInit()
 		std::wstring psPath;
 
 		// 頂点シェーダを検索
-		auto* vertexShader = L"BumpVS.cso";
+		auto* vertexShader = L"LambertVS.cso";
 		if (!SearchFilePath(vertexShader, vsPath)) {
 			ELOG("Error : Vertex Shader Not Found.");
 			return false;
 		}
 
 		// ピクセルシェーダを検索
-		auto* pixelShderName = L"BumpPS.cso";
+		auto* pixelShderName = L"CookTorrancePS.cso";
 		if (!SearchFilePath(pixelShderName, psPath)) {
 			ELOG("Error : Pixel Shader Not Found.");
 			return false;
@@ -416,7 +413,6 @@ void SampleApp::OnRender()
 
 			// テクスチャ設定
 			pCmd->SetGraphicsRootDescriptorTable(3, m_material.GetTextureHandle(id, TU_DIFFUSE));
-			pCmd->SetGraphicsRootDescriptorTable(4, m_material.GetTextureHandle(id, TU_NORMAL));
 
 			// メッシュを描画
 			m_pMesh[i]->Draw(pCmd);

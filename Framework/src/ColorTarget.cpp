@@ -1,6 +1,39 @@
 #include "ColorTarget.h"
 #include "DescriptorPool.h"
 
+namespace {
+	DXGI_FORMAT ConvertToSRGB(DXGI_FORMAT format) {
+		DXGI_FORMAT result = format;
+		switch (format) {
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+			result = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC1_UNORM:
+			result = DXGI_FORMAT_BC1_UNORM;
+			break;
+		case DXGI_FORMAT_BC2_UNORM:
+			result = DXGI_FORMAT_BC2_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC3_UNORM:
+			result = DXGI_FORMAT_BC3_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+			result = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_B8G8R8X8_UNORM:
+			result = DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC7_UNORM:
+			result = DXGI_FORMAT_BC7_UNORM_SRGB;
+			break;
+		default:
+			break;
+		}
+
+		return result;
+	}
+}
+
 ColorTarget::ColorTarget(){
 }
 
@@ -8,7 +41,7 @@ ColorTarget::~ColorTarget(){
 	Term();
 }
 
-bool ColorTarget::Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t width, uint32_t height, DXGI_FORMAT format)
+bool ColorTarget::Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t width, uint32_t height, DXGI_FORMAT format, bool useSRGB)
 {
 	if (pDevice == nullptr || pPoolRTV == nullptr || width == 0 || height == 0) {
 		return false;
@@ -64,8 +97,15 @@ bool ColorTarget::Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t
 		return false;
 	}
 
+	auto viewFormat = format;
+
+	// SRGBフォーマットを使用する場合は、sRGBフォーマットを選択
+	if (useSRGB) {
+		viewFormat = ConvertToSRGB(format);
+	}
+
 	m_viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	m_viewDesc.Format = format;
+	m_viewDesc.Format = viewFormat;
 	m_viewDesc.Texture2D.MipSlice = 0;
 	m_viewDesc.Texture2D.PlaneSlice = 0;
 
@@ -74,7 +114,7 @@ bool ColorTarget::Init(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t
 	return true;
 }
 
-bool ColorTarget::InitFromBackBuffer(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, uint32_t index, IDXGISwapChain* pSwapChain)
+bool ColorTarget::InitFromBackBuffer(ID3D12Device* pDevice, DescriptorPool* pPoolRTV, bool useSRGB, uint32_t index, IDXGISwapChain* pSwapChain)
 {
 	if (pDevice == nullptr || pPoolRTV == nullptr || pSwapChain == nullptr) {
 		return false;
@@ -99,8 +139,15 @@ bool ColorTarget::InitFromBackBuffer(ID3D12Device* pDevice, DescriptorPool* pPoo
 	DXGI_SWAP_CHAIN_DESC desc;
 	pSwapChain->GetDesc(&desc);
 
+	auto viewFormat = desc.BufferDesc.Format;
+
+	// SRGBフォーマットを使用する場合は、sRGBフォーマットを選択
+	if (useSRGB) {
+		viewFormat = ConvertToSRGB(viewFormat);
+	}
+
 	m_viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	m_viewDesc.Format = desc.BufferDesc.Format;
+	m_viewDesc.Format = viewFormat;
 	m_viewDesc.Texture2D.MipSlice = 0;
 	m_viewDesc.Texture2D.PlaneSlice = 0;
 

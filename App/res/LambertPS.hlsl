@@ -26,6 +26,8 @@ cbuffer MaterialBuffer : register(b2) {
 SamplerState colorSmp : register(s0);
 Texture2D colorMap : register(t0);
 
+static const float F_PI = 3.141596535f;
+
 PSOutput main(VSOutput input)
 {
 	PSOutput output = (PSOutput)0;
@@ -33,10 +35,12 @@ PSOutput main(VSOutput input)
 	float3 n = normalize(input.normal);
 	float3 l = normalize(lightPosition - input.worldPos.xyz);
 
-	float4 c = colorMap.Sample(colorSmp, input.texCoord);
-	float3 d = lightColor * diffuse * saturate(dot(l, n));
+	float nl = saturate(dot(n, l));
 
-	output.color = float4(c.rgb * d, c.a * alpha);
+	float4 c = colorMap.Sample(colorSmp, input.texCoord);
+	float3 d = diffuse * (1.0 / F_PI);
+
+	output.color = float4(lightColor * c.rgb * d * nl, c.a * alpha);
 
 	return output;
 }

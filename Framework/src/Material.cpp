@@ -47,7 +47,7 @@ bool Material::Init(ID3D12Device* pDevice, DescriptorPool* pPool, size_t bufferS
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
-		if (!pTexture->Init(pDevice, pPool, &desc, false)) {
+		if (!pTexture->Init(pDevice, pPool, &desc, true, false)) {
 			pTexture->Term();
 			delete pTexture;
 			return false;
@@ -155,7 +155,7 @@ bool Material::SetTexture(size_t index, TEXTURE_USAGE usage, const std::wstring&
 	}
 
 	// ‰Šú‰»
-	if (!pTexture->Init(m_pDevice, m_pPool, findPath.c_str(), batch)) {
+	if (!pTexture->Init(m_pDevice, m_pPool, findPath.c_str(), true, batch)) {
 		pTexture->Term();
 		delete pTexture;
 		return false;

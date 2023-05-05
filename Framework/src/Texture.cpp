@@ -3,6 +3,39 @@
 #include "DescriptorPool.h"
 //#include "Logger.h"
 
+namespace {
+	DXGI_FORMAT ConvertToSRGB(DXGI_FORMAT format) {
+		DXGI_FORMAT result = format;
+		switch (format) {
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+			result = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC1_UNORM:
+			result = DXGI_FORMAT_BC1_UNORM;
+			break;
+		case DXGI_FORMAT_BC2_UNORM:
+			result = DXGI_FORMAT_BC2_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC3_UNORM:
+			result = DXGI_FORMAT_BC3_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+			result = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_B8G8R8X8_UNORM:
+			result = DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+			break;
+		case DXGI_FORMAT_BC7_UNORM:
+			result = DXGI_FORMAT_BC7_UNORM_SRGB;
+			break;
+		default:
+			break;
+		}
+
+		return result;
+	}
+}
+
 Texture::Texture()
 	:m_pTex(nullptr)
 	, m_pHandle(nullptr)
@@ -14,7 +47,7 @@ Texture::~Texture()
 	Term();
 }
 
-bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* fileName, DirectX::ResourceUploadBatch& batch)
+bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* fileName, bool useSRGB, DirectX::ResourceUploadBatch& batch)
 {
 	if (pDevice == nullptr || pPool == nullptr || fileName == nullptr) {
 		return false;
@@ -33,15 +66,21 @@ bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* 
 		return false;
 	}
 
-	// ファイルからテクスチャを生成
 	bool isCube = false;
-	auto hr = DirectX::CreateDDSTextureFromFile(
+	auto flag = DirectX::DDS_LOADER_MIP_AUTOGEN;
+	if (useSRGB) {
+		flag = DirectX::DDS_LOADER_FORCE_SRGB;
+	}
+
+	// ファイルからテクスチャを生成
+	auto hr = DirectX::CreateDDSTextureFromFileEx(
 		pDevice,
 		batch,
 		fileName,
-		m_pTex.GetAddressOf(),
-		false,
 		0,
+		D3D12_RESOURCE_FLAG_NONE,
+		flag,
+		m_pTex.GetAddressOf(),
 		nullptr,
 		&isCube);
 	if (FAILED(hr)) {
@@ -58,7 +97,7 @@ bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const wchar_t* 
 	return true;
 }
 
-bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RESOURCE_DESC* pDesc, bool isCube)
+bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RESOURCE_DESC* pDesc, bool useSRGB, bool isCube)
 {
 	if (pDevice == nullptr || pPool == nullptr || pDesc == nullptr) {
 		return false;
@@ -77,6 +116,11 @@ bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RES
 		return false;
 	}
 
+	auto desc = *pDesc;
+	if (useSRGB) {
+		desc.Format = ConvertToSRGB(desc.Format);
+	}
+
 	D3D12_HEAP_PROPERTIES prop = {};
 	prop.Type = D3D12_HEAP_TYPE_DEFAULT;
 	prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
@@ -87,7 +131,7 @@ bool Texture::Init(ID3D12Device* pDevice, DescriptorPool* pPool, const D3D12_RES
 	auto hr = pDevice->CreateCommittedResource(
 		&prop,
 		D3D12_HEAP_FLAG_NONE,
-		pDesc,
+		&desc,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		nullptr,
 		IID_PPV_ARGS(m_pTex.GetAddressOf())
