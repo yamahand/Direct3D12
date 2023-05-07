@@ -3,6 +3,8 @@
 #include <App.h>
 #include <ConstantBuffer.h>
 #include <Material.h>
+#include <ImGuiDx12.h>
+#include <ImGuiDx12.h>
 
 class SampleApp : public App {
 public:
@@ -25,4 +27,5 @@ private:
 	ComPtr<ID3D12PipelineState>	m_pPSO;
 	ComPtr<ID3D12RootSignature>	m_pRootSig;
 	float m_rotateAngle = 0.0f;
+	ImGuiDx12 m_imgui;
 };

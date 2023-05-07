@@ -19,6 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\external\imgui\imconfig.h" />
+    <ClInclude Include="..\external\imgui\imgui.h" />
+    <ClInclude Include="..\external\imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="..\external\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="..\external\imgui\imgui_internal.h" />
+    <ClInclude Include="..\external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\external\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\external\imgui\imstb_truetype.h" />
     <ClInclude Include="..\include\App.h" />
     <ClInclude Include="..\include\ColorTarget.h" />
     <ClInclude Include="..\include\CommandList.h" />
@@ -28,6 +36,7 @@
     <ClInclude Include="..\include\DescriptorPool.h" />
     <ClInclude Include="..\include\Fence.h" />
     <ClInclude Include="..\include\FileUtil.h" />
+    <ClInclude Include="..\include\ImGuiDx12.h" />
     <ClInclude Include="..\include\IndexBuffer.h" />
     <ClInclude Include="..\include\InlineUtil.h" />
     <ClInclude Include="..\include\Logger.h" />
@@ -35,10 +44,18 @@
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
     <ClInclude Include="..\include\ResMesh.h" />
+    <ClInclude Include="..\include\stdafx.h" />
     <ClInclude Include="..\include\Texture.h" />
     <ClInclude Include="..\include\VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\external\imgui\imgui.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\src\App.cpp" />
     <ClCompile Include="..\src\ColorTarget.cpp" />
     <ClCompile Include="..\src\CommandList.cpp" />
@@ -47,11 +64,13 @@
     <ClCompile Include="..\src\DescriptorPool.cpp" />
     <ClCompile Include="..\src\Fence.cpp" />
     <ClCompile Include="..\src\FileUtil.cpp" />
+    <ClCompile Include="..\src\ImGuiDx12.cpp" />
     <ClCompile Include="..\src\IndexBuffer.cpp" />
     <ClCompile Include="..\src\Logger.cpp" />
     <ClCompile Include="..\src\Material.cpp" />
     <ClCompile Include="..\src\Mesh.cpp" />
     <ClCompile Include="..\src\ResMesh.cpp" />
+    <ClCompile Include="..\src\stdafx.cpp" />
     <ClCompile Include="..\src\Texture.cpp" />
     <ClCompile Include="..\src\VertexBuffer.cpp" />
   </ItemGroup>
@@ -150,9 +169,10 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\include;$(SolutionDir)packages\Assimp_native_4.1_v142.4.1.0\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\include;$(ProjectDir)..\external;$(SolutionDir)packages\Assimp_native_4.1_v142.4.1.0\build\native\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -6,6 +6,9 @@
 #include "InlineUtil.h"
 #include "SimpleMath.h"
 
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui/imgui.h>
+
 using namespace DirectX::SimpleMath;
 
 namespace {
@@ -287,6 +290,7 @@ bool SampleApp::OnInit()
 			ELOG("Error : m_pDevice->CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
 			return false;
 		}
+		m_pPSO->SetName(L"pipeline");
 	}
 
 	// 変換行列用の定数バッファの生成
@@ -328,6 +332,8 @@ bool SampleApp::OnInit()
 		m_rotateAngle = DirectX::XMConvertToRadians(-60.0f);
 	}
 
+	m_imgui.Init(m_pDevice.Get(), m_hwnd);
+
 	return true;
 }
 
@@ -355,6 +361,8 @@ void SampleApp::OnTerm()
 
 void SampleApp::OnRender()
 {
+	m_imgui.BeginFrame();
+
 	// 更新処理
 	{
 		m_rotateAngle += 0.025f;
@@ -362,6 +370,21 @@ void SampleApp::OnRender()
 		auto pTransform = m_transform[m_frameIndex]->GetPtr<Transform>();
 		pTransform->world = DirectX::XMMatrixRotationY(m_rotateAngle);
 	}
+
+	if (ImGui::Begin("status", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::DragFloat("rotateAngle", &m_rotateAngle, 0.025f);
+		for (size_t i = 0; i < m_material.GetCount(); i++)
+		{
+			auto ptr = m_material.GetBufferPtr<MaterialBuffer>(i);
+			char label[32];
+			sprintf_s(label, 32, "roughness_%zd", i);
+			ImGui::DragFloat(label, &ptr->roughness, 0.01f, 0.0f, 1.0f);
+			sprintf_s(label, 32, "metallic_%zd", i);
+			ImGui::DragFloat(label, &ptr->metallic, 0.01f, 0.0f, 1.0f);
+		}
+	}
+	ImGui::End();
+
 
 	// コマンドリストの記録開始
 	auto pCmd = m_commandList.Reset();
@@ -425,12 +448,14 @@ void SampleApp::OnRender()
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT);
 
-	// お万度リストの記録終了
+	// コマンドリストの記録終了
 	pCmd->Close();
 
+	m_imgui.Render(m_colorTargets[m_frameIndex].GetResource(), handleRTV->handleCPU);
+
 	// コマンドリスト実行
-	ID3D12CommandList* pLists[] = { pCmd };
-	m_pQueue->ExecuteCommandLists(1, pLists);
+	ID3D12CommandList* pLists[] = { pCmd, m_imgui.GetCommandList()};
+	m_pQueue->ExecuteCommandLists(2, pLists);
 
 	// 画面に表示
 	Present(1);

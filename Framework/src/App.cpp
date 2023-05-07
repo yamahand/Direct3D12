@@ -18,6 +18,9 @@ namespace {
 	}
 }
 
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 /// <summary>
 /// コンストラクタ
 /// </summary>
@@ -407,6 +410,9 @@ void App::MainLoop() {
 
 LRESULT CALLBACK App::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 	auto instance = reinterpret_cast<App*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wp, lp))
+		return true;
 
 	switch (msg)
 	{
