@@ -61,5 +61,8 @@
     <FxCompile Include="..\res\CookTorrancePS.hlsl">
       <Filter>リソースファイル</Filter>
     </FxCompile>
+    <FxCompile Include="..\res\GGXPS.hlsl">
+      <Filter>リソースファイル</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

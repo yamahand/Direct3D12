@@ -57,3 +57,4 @@ project.lock.json
 project.assets.json
 Framework/project/x64
 App/project/x64
+App/project/imgui.ini

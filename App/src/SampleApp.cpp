@@ -244,7 +244,7 @@ bool SampleApp::OnInit()
 		}
 
 		// ピクセルシェーダを検索
-		auto* pixelShderName = L"CookTorrancePS.cso";
+		auto* pixelShderName = L"GGXPS.cso";
 		if (!SearchFilePath(pixelShderName, psPath)) {
 			ELOG("Error : Pixel Shader Not Found.");
 			return false;
